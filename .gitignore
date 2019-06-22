@@ -1,0 +1,12 @@
+**/[Bb]in/*
+**/[Pp]ackages/*
+**/[Oo]bj/*
+*.dll
+*.nupkg
+*.p7s
+*.pdb
+*.cache
+*.suo
+*.ide*
+*.force
+*.lock
