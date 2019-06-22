@@ -1,6 +1,4 @@
-**/[Bb]in/*
 **/[Pp]ackages/*
-**/[Oo]bj/*
 *.dll
 *.nupkg
 *.p7s
