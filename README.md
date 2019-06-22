@@ -2,7 +2,7 @@
 This tool aids in finding the unique locators for web application automation using Selenium.
 
 ## Functionality
-The tool uses C# Winform application to launch Chrome Browser using Selenium. The selenium is used to scrape through the web page and identify the unique locators (Id, Name, Text, Class, XPath).
+The tool uses C# Winform application to launch Chrome Browser using Selenium. The selenium is used to scrape through the web page and identify the unique locators (Id, Name, Text, Class, Relative XPath).
 
 ### Launch Chrome
 This button launches the Chrome Browser using Selenium.
