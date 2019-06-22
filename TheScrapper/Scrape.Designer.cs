@@ -50,6 +50,7 @@
             this.Name = "Scrape";
             this.Text = "Scrape";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Scrape_FormClosed);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Scrape_KeyDown);
             this.ResumeLayout(false);
 
         }

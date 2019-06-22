@@ -12,11 +12,15 @@ namespace TheScrapper
         private IWebElement SelectedElm;
         bool bFlag;
         private List<string> tags;
+        private string SaveMethod;
+        private bool bSupport;
 
         public TheScrapperForm()
         {
             InitializeComponent();
             OnLoad();
+            SaveMethod = "C#";
+            bSupport = false;
         }
 
         private void OnLoad()
@@ -36,6 +40,7 @@ namespace TheScrapper
             options.AddArgument("start-maximized");
             //options.AddAdditionalCapability("useAutomationExtension", "false");
             driver = new ChromeDriver(options);
+            driver.Url = "https://www.google.co.in";
             BtnLaunch.Enabled = false;
             BtnFrames.Enabled = true;
         }
@@ -61,6 +66,8 @@ namespace TheScrapper
         {
             if (BtnLaunch.Enabled)
                 return;
+            if (LvLocators.Items.Count > 0)
+                LvLocators.Items.Clear();
             ElementChecker ec = new ElementChecker(driver, driver.PageSource);
             Scrape scrape = new Scrape();
             scrape.ShowDialog();
@@ -86,7 +93,7 @@ namespace TheScrapper
                     }
                 }
             }
-            this.TopMost = true;
+            //this.TopMost = true;
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -96,7 +103,15 @@ namespace TheScrapper
 
         private void BtnSettings_Click(object sender, EventArgs e)
         {
-
+            Settings settings = new Settings();
+            settings.SetData(SaveMethod, bSupport);
+            settings.ShowDialog();
+            if(settings.DialogResult == DialogResult.OK)
+            {
+                Tuple<string, bool> data = settings.GetData();
+                SaveMethod = data.Item1;
+                bSupport = data.Item2;
+            }
         }
 
         private void TheScrapperForm_FormClosed(object sender, FormClosedEventArgs e)

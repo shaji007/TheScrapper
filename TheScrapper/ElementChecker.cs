@@ -202,10 +202,11 @@ namespace TheScrapper
                 case LocatoryType.Class:
                     if(data.Contains(" "))
                     {
-                        xpath = MakeXPath(tag, data, ' ', "@class");
+                        xpath = "/" + MakeXPath(tag, data, ' ', "@class");
                         retdata = xpath;
                     }
-                    xpath = "//" + tag + "[@class='" + data + "']";
+                    else
+                        xpath = "//" + tag + "[@class='" + data + "']";
                     bFlag = CheckUniqueness(xpath);
                     break;
                 case LocatoryType.Text:
@@ -213,10 +214,11 @@ namespace TheScrapper
                     if (data.Contains("'"))
                     {
                         check = true;
-                        xpath = MakeXPath(tag, data, '\'', "text()");
+                        xpath = "/" + MakeXPath(tag, data, '\'', "text()");
                         retdata = xpath;
                     }
-                    xpath = "//" + tag + "[text()='" + data + "']";
+                    else
+                        xpath = "//" + tag + "[text()='" + data + "']";
                     if (tag != "a" || check)
                         retdata = xpath;
                     bFlag = CheckUniqueness(xpath);
@@ -254,7 +256,7 @@ namespace TheScrapper
                     xpath += " and ";
                 }
             }
-            return xpath = "//" + tag + "[" + xpath + "]";
+            return xpath = "/" + tag + "[" + xpath + "]";
         }
 
         private string CheckXpathWithSingleAttribute(WrappedElement elm)
@@ -266,18 +268,30 @@ namespace TheScrapper
             {
                 foreach (var attr in elm.Attributes)
                 {
-                    xpath = "/" + elm.Tag + "[@" + attr.Key + "='" + attr.Value.ToString() + "']";
-                    if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
-                        single.Add(xpath);
+                    if (attr.Value.ToString().Contains("'"))
+                    {
+                        xpath = MakeXPath(elm.Tag, attr.Value.ToString(), '\'', "@" + attr.Key);
+                    }
                     else
+                        xpath = "/" + elm.Tag + "[@" + attr.Key + "='" + attr.Value.ToString() + "']";
+                    if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                    {
+                        single.Add(xpath);
+                        xpath = "";
+                    }
+                    else
+                    {
                         break;
+                    }
                 }
             }
             else
             {
                 single.Add("/" + elm.Tag);
             }
-            return "/" + xpath;
+            if(!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
+            return xpath;
         }
 
         private string CheckXpathWithSingleAttributeAndText(WrappedElement elm)
@@ -293,7 +307,10 @@ namespace TheScrapper
                         xpath = "/" + elm.Tag + "[@" + attr.Key + "='" + attr.Value.ToString() + "' and text()='" + elm.Text + "']";
                     // if contains apostrophe
                     if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                    {
                         singletext.Add(xpath);
+                        xpath = "";
+                    }
                     else
                         break;
                 }
@@ -302,6 +319,8 @@ namespace TheScrapper
             {
                 singletext.Add("/" + elm.Tag);
             }
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
             return xpath;
         }
 
@@ -319,9 +338,13 @@ namespace TheScrapper
                     {
                         for (int j = 1; j < max; j++)
                         {
-                            xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "']";
+                            if(!elm.Attributes.ElementAt(i).Value.ToString().Contains("'") || !elm.Attributes.ElementAt(j).Value.ToString().Contains("'"))
+                                xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "']";
                             if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                            {
                                 doub.Add(xpath);
+                                xpath = "";
+                            }
                             else
                             {
                                 j = max;
@@ -335,7 +358,9 @@ namespace TheScrapper
             {
                 doub.Add("/" + elm.Tag);
             }
-            return "/" + xpath;
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
+            return xpath;
         }
 
         private string CheckXpathWithDoubleAttributeAndText(WrappedElement elm)
@@ -356,7 +381,10 @@ namespace TheScrapper
                             {
                                 xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "' and text()='" + elm.Text + "']";
                                 if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                                {
                                     doubtext.Add(xpath);
+                                    xpath = "";
+                                }
                                 else
                                 {
                                     j = max;
@@ -371,7 +399,9 @@ namespace TheScrapper
             {
                 doubtext.Add("/" + elm.Tag);
             }
-            return "/" + xpath;
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
+            return xpath;
         }
 
 
@@ -392,6 +422,7 @@ namespace TheScrapper
                         if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                         {
                             parnt.Add(xpath);
+                            xpath = "";
                         }
                         else
                         {
@@ -410,6 +441,7 @@ namespace TheScrapper
                         if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                         {
                             parnt.Add(xpath);
+                            xpath = "";
                         }
                         else
                         {
@@ -429,6 +461,7 @@ namespace TheScrapper
                     if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                     {
                         parnt.Add(xpath);
+                        xpath = "";
                     }
                     else
                     {
@@ -441,6 +474,7 @@ namespace TheScrapper
                     if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                     {
                         parnt.Add(xpath);
+                        xpath = "";
                     }
                     else
                     {
@@ -448,6 +482,8 @@ namespace TheScrapper
                     }
                 }
             }
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
             return xpath;
         }
 
@@ -469,6 +505,8 @@ namespace TheScrapper
                             flag = true;
                             break;
                         }
+                        else
+                            xpath = "";
                     }
                     if (flag)
                         break;
@@ -483,8 +521,12 @@ namespace TheScrapper
                     {
                         break;
                     }
+                    else
+                        xpath = "";
                 }
             }
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
             return xpath;
         }
 
@@ -522,6 +564,8 @@ namespace TheScrapper
                         {
                             break;
                         }
+                        else
+                            xpath = "";
                     }
                     foreach (var item in elm.Attributes)
                     {
@@ -530,9 +574,13 @@ namespace TheScrapper
                         {
                             break;
                         }
+                        else
+                            xpath = "";
                     }
                 }
             }
+            if (!String.IsNullOrEmpty(xpath))
+                xpath = "/" + xpath;
             return xpath;
         }
 
@@ -556,6 +604,8 @@ namespace TheScrapper
                                 flag = true;
                                 break;
                             }
+                            else
+                                xpath = "";
                         }
                         if (flag)
                             break;
@@ -570,6 +620,8 @@ namespace TheScrapper
                         {
                             break;
                         }
+                        else
+                            xpath = "";
                     }
                     foreach (var item in elm.Attributes)
                     {
@@ -578,6 +630,8 @@ namespace TheScrapper
                         {
                             break;
                         }
+                        else
+                            xpath = "";
                     }
                 }
             }
