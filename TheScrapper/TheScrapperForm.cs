@@ -4,6 +4,7 @@ using OpenQA.Selenium.Interactions;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using static System.Windows.Forms.ListView;
 
 namespace TheScrapper
 {
@@ -16,6 +17,7 @@ namespace TheScrapper
         private string SaveMethod;
         private bool bSupport;
         private ListViewItem delItem;
+        private int delIndex;
 
         public TheScrapperForm()
         {
@@ -23,6 +25,7 @@ namespace TheScrapper
             OnLoad();
             SaveMethod = "C#";
             bSupport = false;
+            delIndex = -1;
         }
 
         private void OnLoad()
@@ -136,46 +139,18 @@ namespace TheScrapper
 
         private void LvLocators_MouseClick(object sender, MouseEventArgs e)
         {
+
             ListViewItem clickedItem = LvLocators.GetItemAt(e.X, e.Y);
             if(e.Button == MouseButtons.Left)
             {
                 if (clickedItem != null)
                 {
-                    string type = clickedItem.SubItems[2].Text;
-                    string value = clickedItem.SubItems[3].Text;
-                    By BySelectedItem = null;
-                    switch (type.ToLower())
-                    {
-                        case "id":
-                            BySelectedItem = By.Id(value);
-                            break;
-                        case "name":
-                            BySelectedItem = By.Name(value);
-                            break;
-                        case "class":
-                            BySelectedItem = By.ClassName(value);
-                            break;
-                        case "css":
-                            BySelectedItem = By.CssSelector(value);
-                            break;
-                        case "text":
-                            BySelectedItem = By.LinkText(value);
-                            break;
-                        case "xpath":
-                            BySelectedItem = By.XPath(value);
-                            break;
-                    }
-                    SelectedElm = driver.FindElement(BySelectedItem);
-                    Actions actions = new Actions(driver);
-                    actions.MoveToElement(SelectedElm);
-                    actions.Perform();
-                    IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-                    js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", SelectedElm);
-                    bFlag = true;
+                    HighlightElement(clickedItem);
                 }
             }
             else if(e.Button == MouseButtons.Right)
             {
+                delIndex = clickedItem.Index;
                 delItem = clickedItem;
                 clickedItem.Remove();
             }
@@ -204,25 +179,76 @@ namespace TheScrapper
             }
         }
 
-        private void LvLocators_KeyDown(object sender, KeyEventArgs e)
+        private void LvLocators_KeyUp(object sender, KeyEventArgs e)
         {
-            
-            if(e.KeyCode == System.Windows.Forms.Keys.Down)
+            SelectedListViewItemCollection items = LvLocators.SelectedItems;
+            if (e.KeyCode == System.Windows.Forms.Keys.Down)
             {
+                if (items.Count == 1)
+                {
+                    HighlightElement(items[0]);
+                }
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.Up)
+            {
+                if (items.Count == 1)
+                {
+                    if (items.Count == 1)
+                    {
+                        HighlightElement(items[0]);
+                    }
+                }
+            }
+            else if (e.Control && e.KeyCode == System.Windows.Forms.Keys.Z)
+            {
+                if (delIndex != -1)
+                    LvLocators.Items.Insert(delIndex, delItem);
+            }
+            else if (e.Control && e.KeyCode == System.Windows.Forms.Keys.Y)
+            {
+                delIndex = delItem.Index;
+                LvLocators.Items.Remove(delItem);
+            }
+            else if (e.Control && e.KeyCode == System.Windows.Forms.Keys.C)
+            {
+                if (items.Count == 1)
+                    Clipboard.SetText(items[0].SubItems[3].Text);
+            }
+        }
 
-            }
-            else if(e.KeyCode == System.Windows.Forms.Keys.Up)
+        private void HighlightElement(ListViewItem item)
+        {
+            string type = item.SubItems[2].Text;
+            string value = item.SubItems[3].Text;
+            By BySelectedItem = null;
+            switch (type.ToLower())
             {
-
+                case "id":
+                    BySelectedItem = By.Id(value);
+                    break;
+                case "name":
+                    BySelectedItem = By.Name(value);
+                    break;
+                case "class":
+                    BySelectedItem = By.ClassName(value);
+                    break;
+                case "css":
+                    BySelectedItem = By.CssSelector(value);
+                    break;
+                case "text":
+                    BySelectedItem = By.LinkText(value);
+                    break;
+                case "xpath":
+                    BySelectedItem = By.XPath(value);
+                    break;
             }
-            else if(e.KeyCode == System.Windows.Forms.Keys.ControlKey && e.KeyCode == System.Windows.Forms.Keys.Z)
-            {
-                LvLocators.Items.Add(delItem);
-            }
-            else if(e.KeyCode == System.Windows.Forms.Keys.ControlKey && e.KeyCode == System.Windows.Forms.Keys.Y)
-            {
-
-            }
+            SelectedElm = driver.FindElement(BySelectedItem);
+            Actions actions = new Actions(driver);
+            actions.MoveToElement(SelectedElm);
+            actions.Perform();
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", SelectedElm);
+            bFlag = true;
         }
     }
 }

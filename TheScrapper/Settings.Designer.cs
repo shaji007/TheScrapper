@@ -77,7 +77,7 @@
             this.Name = "Settings";
             this.Text = "Settings";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.BtnSettings_FormClosed);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BtnSettings_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Settings_KeyUp);
             this.ResumeLayout(false);
             this.PerformLayout();
 

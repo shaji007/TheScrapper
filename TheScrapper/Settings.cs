@@ -29,18 +29,29 @@ namespace TheScrapper
             this.Close();
         }
 
-        private void BtnSettings_KeyDown(object sender, KeyEventArgs e)
+        public Tuple<string, bool> GetData()
         {
-            if(e.KeyCode == Keys.Escape)
+            return new Tuple<string, bool>(CbSaveMethod.GetItemText(CbSaveMethod.SelectedItem), ChkbSupport.Checked);
+        }
+
+        private void Settings_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
             {
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
         }
 
-        public Tuple<string, bool> GetData()
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            return new Tuple<string, bool>(CbSaveMethod.GetItemText(CbSaveMethod.SelectedItem), ChkbSupport.Checked);
+            if (keyData == Keys.Escape)
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }
