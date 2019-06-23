@@ -211,8 +211,38 @@ namespace TheScrapper
             }
             else if (e.Control && e.KeyCode == System.Windows.Forms.Keys.C)
             {
+                string cbText = "";
                 if (items.Count == 1)
-                    Clipboard.SetText(items[0].SubItems[3].Text);
+                {
+                    ListViewItem item = items[0];
+                    string value = item.SubItems[3].Text;
+                    if (String.IsNullOrEmpty(item.SubItems[0].Text))
+                    {
+                        switch(item.SubItems[2].Text)
+                        {
+                            case "id":
+                                cbText = "#" + value;
+                                break;
+                            case "name":
+                                cbText = "[name='"+ value +"']";
+                                break;
+                            case "text":
+                                cbText = value;
+                                break;
+                            case "xpath":
+                                cbText = value;
+                                break;
+                            case "class":
+                                cbText = "." + value;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // Handle language specific locator string
+                    }
+                    Clipboard.SetText(cbText);
+                }
             }
         }
 
