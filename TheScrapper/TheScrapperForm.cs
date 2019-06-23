@@ -1,5 +1,6 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -14,6 +15,7 @@ namespace TheScrapper
         private List<string> tags;
         private string SaveMethod;
         private bool bSupport;
+        private ListViewItem delItem;
 
         public TheScrapperForm()
         {
@@ -135,36 +137,47 @@ namespace TheScrapper
         private void LvLocators_MouseClick(object sender, MouseEventArgs e)
         {
             ListViewItem clickedItem = LvLocators.GetItemAt(e.X, e.Y);
-            if (clickedItem != null)
+            if(e.Button == MouseButtons.Left)
             {
-                string type = clickedItem.SubItems[2].Text;
-                string value = clickedItem.SubItems[3].Text;
-                By BySelectedItem = null;
-                switch(type.ToLower())
+                if (clickedItem != null)
                 {
-                    case "id":
-                        BySelectedItem = By.Id(value);
-                        break;
-                    case "name":
-                        BySelectedItem = By.Name(value);
-                        break;
-                    case "class":
-                        BySelectedItem = By.ClassName(value);
-                        break;
-                    case "css":
-                        BySelectedItem = By.CssSelector(value);
-                        break;
-                    case "text":
-                        BySelectedItem = By.LinkText(value);
-                        break;
-                    case "xpath":
-                        BySelectedItem = By.XPath(value);
-                        break;
+                    string type = clickedItem.SubItems[2].Text;
+                    string value = clickedItem.SubItems[3].Text;
+                    By BySelectedItem = null;
+                    switch (type.ToLower())
+                    {
+                        case "id":
+                            BySelectedItem = By.Id(value);
+                            break;
+                        case "name":
+                            BySelectedItem = By.Name(value);
+                            break;
+                        case "class":
+                            BySelectedItem = By.ClassName(value);
+                            break;
+                        case "css":
+                            BySelectedItem = By.CssSelector(value);
+                            break;
+                        case "text":
+                            BySelectedItem = By.LinkText(value);
+                            break;
+                        case "xpath":
+                            BySelectedItem = By.XPath(value);
+                            break;
+                    }
+                    SelectedElm = driver.FindElement(BySelectedItem);
+                    Actions actions = new Actions(driver);
+                    actions.MoveToElement(SelectedElm);
+                    actions.Perform();
+                    IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+                    js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", SelectedElm);
+                    bFlag = true;
                 }
-                SelectedElm = driver.FindElement(BySelectedItem);
-                IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-                js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", SelectedElm);
-                bFlag = true;
+            }
+            else if(e.Button == MouseButtons.Right)
+            {
+                delItem = clickedItem;
+                clickedItem.Remove();
             }
         }
 
@@ -175,6 +188,40 @@ namespace TheScrapper
                 IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
                 js.ExecuteScript("arguments[0].setAttribute('style', 'border: none');", SelectedElm);
                 bFlag = false;
+            }
+        }
+
+        private void LvLocators_Leave(object sender, EventArgs e)
+        {
+            if (bFlag)
+            {
+                if (SelectedElm.Displayed)
+                {
+                    IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+                    js.ExecuteScript("arguments[0].setAttribute('style', 'border: none');", SelectedElm);
+                    bFlag = false;
+                }
+            }
+        }
+
+        private void LvLocators_KeyDown(object sender, KeyEventArgs e)
+        {
+            
+            if(e.KeyCode == System.Windows.Forms.Keys.Down)
+            {
+
+            }
+            else if(e.KeyCode == System.Windows.Forms.Keys.Up)
+            {
+
+            }
+            else if(e.KeyCode == System.Windows.Forms.Keys.ControlKey && e.KeyCode == System.Windows.Forms.Keys.Z)
+            {
+                LvLocators.Items.Add(delItem);
+            }
+            else if(e.KeyCode == System.Windows.Forms.Keys.ControlKey && e.KeyCode == System.Windows.Forms.Keys.Y)
+            {
+
             }
         }
     }

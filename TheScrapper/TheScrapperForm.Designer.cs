@@ -77,6 +77,8 @@
             this.LvLocators.UseCompatibleStateImageBehavior = false;
             this.LvLocators.View = System.Windows.Forms.View.Details;
             this.LvLocators.SelectedIndexChanged += new System.EventHandler(this.LvLocators_SelectedIndexChanged);
+            this.LvLocators.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LvLocators_KeyDown);
+            this.LvLocators.Leave += new System.EventHandler(this.LvLocators_Leave);
             this.LvLocators.MouseClick += new System.Windows.Forms.MouseEventHandler(this.LvLocators_MouseClick);
             this.LvLocators.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.LvLocators_MouseDoubleClick);
             // 

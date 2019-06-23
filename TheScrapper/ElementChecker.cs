@@ -224,7 +224,7 @@ namespace TheScrapper
                     bFlag = CheckUniqueness(xpath);
                     break;
                 case LocatoryType.XPath:
-                    bFlag = CheckUniqueness(xpath);
+                    bFlag = CheckUniqueness(data);
                     break;
                 case LocatoryType.CSS:
                     break;
@@ -303,7 +303,7 @@ namespace TheScrapper
             {
                 foreach (var attr in elm.Attributes)
                 {
-                    if(!elm.Text.Contains("'"))
+                    if(!elm.Text.Contains("'") && !String.IsNullOrEmpty(elm.Text))
                         xpath = "/" + elm.Tag + "[@" + attr.Key + "='" + attr.Value.ToString() + "' and text()='" + elm.Text + "']";
                     // if contains apostrophe
                     if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
@@ -338,17 +338,20 @@ namespace TheScrapper
                     {
                         for (int j = 1; j < max; j++)
                         {
-                            if(!elm.Attributes.ElementAt(i).Value.ToString().Contains("'") || !elm.Attributes.ElementAt(j).Value.ToString().Contains("'"))
-                                xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "']";
-                            if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                            if (!elm.Text.Contains("'") && !String.IsNullOrEmpty(elm.Text))
                             {
-                                doub.Add(xpath);
-                                xpath = "";
-                            }
-                            else
-                            {
-                                j = max;
-                                i = max;
+                                if (!elm.Attributes.ElementAt(i).Value.ToString().Contains("'") || !elm.Attributes.ElementAt(j).Value.ToString().Contains("'"))
+                                    xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "']";
+                                if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                                {
+                                    doub.Add(xpath);
+                                    xpath = "";
+                                }
+                                else
+                                {
+                                    j = max;
+                                    i = max;
+                                }
                             }
                         }
                     }
@@ -377,7 +380,7 @@ namespace TheScrapper
                     {
                         for (int j = 1; j < max; j++)
                         {
-                            if (!elm.Text.Contains("'"))
+                            if (!elm.Text.Contains("'") && !String.IsNullOrEmpty(elm.Text))
                             {
                                 xpath = "/" + elm.Tag + "[@" + elm.Attributes.ElementAt(i).Key + "='" + elm.Attributes.ElementAt(i).Value.ToString() + "' and @" + elm.Attributes.ElementAt(j).Key + "='" + elm.Attributes.ElementAt(j).Value.ToString() + "' and text()='" + elm.Text + "']";
                                 if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
@@ -411,14 +414,55 @@ namespace TheScrapper
             parnt = new List<string>();
             string retdata = null;
             string xpath = "";
-            WrappedElement parent = new WrappedElement(driver, elm.Parent);
-            if (parent.Attributes.Count > 0)
+            if (elm.Parent != null)
             {
-                foreach (var p in parent.Attributes)
+                WrappedElement parent = new WrappedElement(driver, elm.Parent);
+                if (parent.Attributes.Count > 0)
                 {
-                    foreach(var item in single)
+                    foreach (var p in parent.Attributes)
                     {
-                        xpath = "/" + parent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                        foreach (var item in single)
+                        {
+                            xpath = "/" + parent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                            if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                            {
+                                parnt.Add(xpath);
+                                xpath = "";
+                            }
+                            else
+                            {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if (flag)
+                            break;
+                    }
+                    foreach (var p in parent.Attributes)
+                    {
+                        foreach (var item in singletext)
+                        {
+                            xpath = "/" + parent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                            if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                            {
+                                parnt.Add(xpath);
+                                xpath = "";
+                            }
+                            else
+                            {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if (flag)
+                            break;
+                    }
+                }
+                else
+                {
+                    foreach (var item in single)
+                    {
+                        xpath = "/" + parent.Tag + item;
                         if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                         {
                             parnt.Add(xpath);
@@ -426,18 +470,12 @@ namespace TheScrapper
                         }
                         else
                         {
-                            flag = true;
                             break;
                         }
                     }
-                    if (flag)
-                        break;
-                }
-                foreach (var p in parent.Attributes)
-                {
                     foreach (var item in singletext)
                     {
-                        xpath = "/" + parent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                        xpath = "/" + parent.Tag + item;
                         if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                         {
                             parnt.Add(xpath);
@@ -445,40 +483,8 @@ namespace TheScrapper
                         }
                         else
                         {
-                            flag = true;
                             break;
                         }
-                    }
-                    if (flag)
-                        break;
-                }
-            }
-            else
-            {
-                foreach (var item in single)
-                {
-                    xpath = "/" + parent.Tag + item;
-                    if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
-                    {
-                        parnt.Add(xpath);
-                        xpath = "";
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                foreach (var item in singletext)
-                {
-                    xpath = "/" + parent.Tag + item;
-                    if (!IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
-                    {
-                        parnt.Add(xpath);
-                        xpath = "";
-                    }
-                    else
-                    {
-                        break;
                     }
                 }
             }
@@ -492,37 +498,40 @@ namespace TheScrapper
             bool flag = false;
             string retdata = null;
             string xpath = "";
-            WrappedElement grandparent = new WrappedElement(driver, elm.GrandParent);
-            if (grandparent.Attributes.Count > 0)
+            if (elm.GrandParent != null)
             {
-                foreach (var p in grandparent.Attributes)
+                WrappedElement grandparent = new WrappedElement(driver, elm.GrandParent);
+                if (grandparent.Attributes.Count > 0)
+                {
+                    foreach (var p in grandparent.Attributes)
+                    {
+                        foreach (var item in parnt)
+                        {
+                            xpath = "/" + grandparent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                            if (IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
+                            {
+                                flag = true;
+                                break;
+                            }
+                            else
+                                xpath = "";
+                        }
+                        if (flag)
+                            break;
+                    }
+                }
+                else
                 {
                     foreach (var item in parnt)
                     {
-                        xpath = "/" + grandparent.Tag + "[@" + p.Key + "='" + p.Value.ToString() + "']" + item;
+                        xpath = "/" + grandparent.Tag + item;
                         if (IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
                         {
-                            flag = true;
                             break;
                         }
                         else
                             xpath = "";
                     }
-                    if (flag)
-                        break;
-                }
-            }
-            else
-            {
-                foreach (var item in parnt)
-                {
-                    xpath = "/" + grandparent.Tag + item;
-                    if (IsUnique(LocatoryType.XPath, "", "/" + xpath, out retdata))
-                    {
-                        break;
-                    }
-                    else
-                        xpath = "";
                 }
             }
             if (!String.IsNullOrEmpty(xpath))
