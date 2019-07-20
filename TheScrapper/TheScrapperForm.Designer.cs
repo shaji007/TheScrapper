@@ -64,6 +64,7 @@
             this.TvFrames.Name = "TvFrames";
             this.TvFrames.Size = new System.Drawing.Size(296, 162);
             this.TvFrames.TabIndex = 2;
+            this.TvFrames.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TvFrames_AfterSelect);
             // 
             // LvLocators
             // 

@@ -39,6 +39,7 @@
       <HintPath>..\packages\HtmlAgilityPack.1.11.7\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -58,6 +59,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ElementChecker.cs" />
+    <Compile Include="Save\Save.cs" />
+    <Compile Include="Save\SaveAsJava.cs" />
+    <Compile Include="Save\SaveAsCSharp.cs" />
+    <Compile Include="Save\SaveAsFeature.cs" />
+    <Compile Include="Save\SaveAsXml.cs" />
+    <Compile Include="VariableName.cs" />
     <Compile Include="WrappedElement.cs" />
     <Compile Include="Scrape.cs">
       <SubType>Form</SubType>

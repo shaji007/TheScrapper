@@ -10,3 +10,5 @@
 *.ide*
 *.force
 *.lock
+/.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json

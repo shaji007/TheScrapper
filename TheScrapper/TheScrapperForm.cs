@@ -3,13 +3,17 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
+using TheScrapper.Save;
 using static System.Windows.Forms.ListView;
 
 namespace TheScrapper
 {
     public partial class TheScrapperForm : Form
     {
+        private static readonly string IFRAME_XPATH = "//iframe[@src='REPLACESRC']";
+
         private static IWebDriver driver;
         private IWebElement SelectedElm;
         bool bFlag;
@@ -18,6 +22,7 @@ namespace TheScrapper
         private bool bSupport;
         private ListViewItem delItem;
         private int delIndex;
+        private TreeNode selectedNode;
 
         public TheScrapperForm()
         {
@@ -54,17 +59,9 @@ namespace TheScrapper
         {
             BtnScrape.Enabled = true;
             TvFrames.Nodes.Clear();
+            selectedNode = null;
             TreeNode root = TvFrames.Nodes.Add("Main");
-            TvFrames.SelectedNode = root;
-            TvFrames.Focus();
-            IReadOnlyCollection<IWebElement> frames = driver.FindElements(By.TagName("iframe"));
-            if(frames != null || frames.Count > 0)
-            {
-                foreach(var frame in frames)
-                {
-                    root.Nodes.Add(frame.GetAttribute("src"));
-                }
-            }
+            GetIFrames(root, null);
         }
 
         private void BtnScrape_Click(object sender, EventArgs e)
@@ -91,7 +88,7 @@ namespace TheScrapper
                         if (ud.type != null)
                         {
                             ListViewItem item = new ListViewItem();
-                            string[] data = { "", tag, ud.type.ToString(), ud.value.ToString() };
+                            string[] data = { VariableName.Name(elm), tag, ud.type.ToString(), ud.value.ToString() };
                             ListViewItem lvi = new ListViewItem(data);
                             LvLocators.Items.Add(lvi);
                         }
@@ -103,7 +100,20 @@ namespace TheScrapper
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-
+            switch(SaveMethod)
+            {
+                case "C#":
+                    
+                    break;
+                case "JAVA":
+                    var java = new SaveAsJava(driver.Title, ref LvLocators, ref TvFrames);
+                    java.SaveFile(".java");
+                    break;
+                case "XML":
+                    var xml = new SaveAsXml(driver.Title, ref LvLocators, ref TvFrames);
+                    xml.SaveFile(".xml");
+                    break;
+            }
         }
 
         private void BtnSettings_Click(object sender, EventArgs e)
@@ -160,8 +170,7 @@ namespace TheScrapper
         {
             if (bFlag)
             {
-                IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-                js.ExecuteScript("arguments[0].setAttribute('style', 'border: none');", SelectedElm);
+                DeHighlightElement(SelectedElm);
                 bFlag = false;
             }
         }
@@ -172,8 +181,7 @@ namespace TheScrapper
             {
                 if (SelectedElm.Displayed)
                 {
-                    IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-                    js.ExecuteScript("arguments[0].setAttribute('style', 'border: none');", SelectedElm);
+                    DeHighlightElement(SelectedElm);
                     bFlag = false;
                 }
             }
@@ -273,12 +281,96 @@ namespace TheScrapper
                     break;
             }
             SelectedElm = driver.FindElement(BySelectedItem);
+            HighlightElement(SelectedElm);
+            bFlag = true;
+        }
+
+        private void HighlightElement(IWebElement elm)
+        {
             Actions actions = new Actions(driver);
-            actions.MoveToElement(SelectedElm);
+            actions.MoveToElement(elm);
             actions.Perform();
             IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-            js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", SelectedElm);
-            bFlag = true;
+            if(elm.TagName.ToLower() == "iframe")
+                js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid green;');", elm);
+            else
+                js.ExecuteScript("arguments[0].setAttribute('style', 'border: 2px solid red;');", elm);
+        }
+
+        private void DeHighlightElement(IWebElement elm)
+        {
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("arguments[0].setAttribute('style', 'border: none;');", elm);
+        }
+
+        private void TvFrames_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            TreeNode curSelNode = e.Node;
+            driver.SwitchTo().DefaultContent();
+            if(selectedNode != null)
+            {
+                string prevSelNodePath = selectedNode.FullPath;
+                string curSelNodePath = curSelNode.FullPath;
+                string[] parts = prevSelNodePath.Split('\\');
+                int max = parts.Length;
+                int lastBeforeElm = max - 2;
+                for(int i=0; i <= lastBeforeElm; i++)
+                {
+                    if(parts[i] != "Main")
+                    {
+                        IWebElement elm = driver.FindElement(By.XPath(IFRAME_XPATH.Replace("REPLACESRC", parts[i])));
+                        driver.SwitchTo().Frame(elm);
+                    }
+                    if(i == lastBeforeElm)
+                    {
+                        DeHighlightElement(driver.FindElement(By.XPath(IFRAME_XPATH.Replace("REPLACESRC", parts[i + 1]))));
+                    }
+                }
+                driver.SwitchTo().DefaultContent();
+                parts = null;
+                parts = curSelNodePath.Split('\\');
+                max = parts.Length;
+                for(int i =0; i< max; i++)
+                {
+                    if(parts[i] != "Main")
+                    {
+                        IWebElement elm = driver.FindElement(By.XPath(IFRAME_XPATH.Replace("REPLACESRC", parts[i])));
+                        driver.SwitchTo().Frame(elm);
+                    }
+                    if(i == max-1)
+                    {
+                        HighlightElement(driver.FindElement(By.XPath(IFRAME_XPATH.Replace("REPLACESRC", parts[i + 1]))));
+                    }
+                }
+            }
+            selectedNode = curSelNode;
+            TvFrames.SelectedNode = selectedNode;
+            TvFrames.Focus();
+        }
+
+        private void GetIFrames(TreeNode node, IWebElement elm)
+        {
+            if(elm != null)
+            {
+                driver.SwitchTo().Frame(elm);
+            }
+            IReadOnlyCollection<IWebElement> elms = driver.FindElements(By.TagName("iframe"));
+            if (elms.Count > 0)
+            {
+                for(int i=0; i<elms.Count; i++)
+                {
+                    TreeNode child = node.Nodes.Add(elms.ElementAt(i).GetAttribute("src"));
+                    GetIFrames(child, elms.ElementAt(i));
+                    if(i==elms.Count -1)
+                    {
+                        driver.SwitchTo().ParentFrame();
+                    }
+                }
+            }
+            else
+            {
+                driver.SwitchTo().ParentFrame();
+            }
         }
     }
 }
